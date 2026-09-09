@@ -196,7 +196,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                               radius: 13,
                               backgroundColor: const Color(0xFFEFF6FF),
                               child: Text(
-                                (student['studentName'] as String).substring(0, 1),
+                                (student['studentName'] as String).isNotEmpty
+                                    ? (student['studentName'] as String).substring(0, 1)
+                                    : 'S',
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.accent),
                               ),
                             ),

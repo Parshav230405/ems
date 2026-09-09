@@ -173,7 +173,9 @@ class _ExaminationMarksScreenState extends State<ExaminationMarksScreen> {
                                 radius: 13,
                                 backgroundColor: const Color(0xFFEFF6FF),
                                 child: Text(
-                                  (s['studentName'] as String).substring(0, 1),
+                                  (s['studentName'] as String).isNotEmpty
+                                      ? (s['studentName'] as String).substring(0, 1)
+                                      : 'S',
                                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.accent),
                                 ),
                               ),

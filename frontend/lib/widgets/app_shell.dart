@@ -457,7 +457,9 @@ class _AppShellState extends State<AppShell> {
                   radius: 14,
                   backgroundColor: AppColors.primary,
                   child: Text(
-                    user != null && user.name.isNotEmpty ? user.name.substring(0, 2).toUpperCase() : 'AD',
+                    user != null && user.name.isNotEmpty
+                        ? (user.name.length >= 2 ? user.name.substring(0, 2).toUpperCase() : user.name.toUpperCase())
+                        : 'AD',
                     style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),

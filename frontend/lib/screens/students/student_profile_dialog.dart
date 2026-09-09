@@ -73,7 +73,7 @@ class _StudentProfileDialogState extends State<StudentProfileDialog> with Single
               radius: 30,
               backgroundColor: const Color(0xFFEFF6FF),
               child: Text(
-                (s['name'] as String).substring(0, 1),
+                (s['name'] as String).isNotEmpty ? (s['name'] as String).substring(0, 1) : 'S',
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.accent),
               ),
             ),

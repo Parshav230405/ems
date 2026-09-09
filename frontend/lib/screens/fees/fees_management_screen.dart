@@ -193,7 +193,9 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
                             radius: 24,
                             backgroundColor: const Color(0xFFEFF6FF),
                             child: Text(
-                              (studentData['student']['name'] as String).substring(0, 1),
+                              (studentData['student']['name'] as String).isNotEmpty
+                                  ? (studentData['student']['name'] as String).substring(0, 1)
+                                  : 'S',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.accent),
                             ),
                           ),

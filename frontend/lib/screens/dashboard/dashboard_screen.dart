@@ -399,7 +399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       radius: 16,
                       backgroundColor: const Color(0xFFEFF6FF),
                       child: Text(
-                        item.name.substring(0, 1),
+                        item.name.isNotEmpty ? item.name.substring(0, 1) : 'S',
                         style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accent, fontSize: 13),
                       ),
                     ),
