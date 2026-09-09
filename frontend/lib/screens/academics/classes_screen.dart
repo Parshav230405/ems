@@ -22,55 +22,131 @@ class _ClassesScreenState extends State<ClassesScreen> {
   }
 
   void _showAddClassDialog() {
-    final nameCtrl = TextEditingController();
-    final divCtrl = TextEditingController();
+    final nameCtrl = TextEditingController(text: '10');
+    final divCtrl = TextEditingController(text: 'A');
     final yearCtrl = TextEditingController(text: '2025-2026');
     final formKey = GlobalKey<FormState>();
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Add Class & Division'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Class / Grade * (e.g. 10)'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Class required' : null,
-              ),
-              TextFormField(
-                controller: divCtrl,
-                decoration: const InputDecoration(labelText: 'Division / Section * (e.g. A)'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Division required' : null,
-              ),
-              TextFormField(
-                controller: yearCtrl,
-                decoration: const InputDecoration(labelText: 'Academic Year * (e.g. 2025-2026)'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Year required' : null,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                await Provider.of<AcademicProvider>(context, listen: false).createClass(
-                  nameCtrl.text.trim(),
-                  divCtrl.text.trim(),
-                  yearCtrl.text.trim(),
-                );
-                if (mounted) Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Create Class'),
+    Widget buildFormField({
+      required String label,
+      required TextEditingController controller,
+      required String hint,
+      String? Function(String?)? validator,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.accent)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              isDense: true,
+            ),
+            validator: validator,
           ),
         ],
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Add Class & Division',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text('Configure class grade, division section, and academic year', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  const Divider(height: 24, color: AppColors.cardBorder),
+                  buildFormField(
+                    label: 'Class / Grade *',
+                    controller: nameCtrl,
+                    hint: 'e.g. 10 or 9',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Class required' : null,
+                  ),
+                  const SizedBox(height: 14),
+                  buildFormField(
+                    label: 'Division / Section *',
+                    controller: divCtrl,
+                    hint: 'e.g. A or B',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Division required' : null,
+                  ),
+                  const SizedBox(height: 14),
+                  buildFormField(
+                    label: 'Academic Year *',
+                    controller: yearCtrl,
+                    hint: 'e.g. 2025-2026',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Year required' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: const BorderSide(color: AppColors.cardBorder),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            await Provider.of<AcademicProvider>(context, listen: false).createClass(
+                              nameCtrl.text.trim(),
+                              divCtrl.text.trim(),
+                              yearCtrl.text.trim(),
+                            );
+                            if (mounted) Navigator.pop(ctx);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Create Class'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -114,7 +190,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
                     ElevatedButton.icon(
                       onPressed: _showAddClassDialog,
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('+ Add Class'),
+                      label: const Text('Add Class'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: Colors.white,

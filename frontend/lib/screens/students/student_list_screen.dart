@@ -78,7 +78,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                     ElevatedButton.icon(
                       onPressed: () => StudentFormDialog.show(context),
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('+ Add Student'),
+                      label: const Text('Add Student'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: Colors.white,

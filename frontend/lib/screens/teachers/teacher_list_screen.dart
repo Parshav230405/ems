@@ -38,63 +38,141 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
     final qualCtrl = TextEditingController(text: teacher?.qualification ?? 'M.Sc. B.Ed.');
     final formKey = GlobalKey<FormState>();
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(teacher != null ? 'Edit Teacher' : 'Add Teacher'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Teacher Name *'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Name required' : null,
-              ),
-              TextFormField(
-                controller: emailCtrl,
-                decoration: const InputDecoration(labelText: 'Email *'),
-                validator: (v) => v == null || !v.contains('@') ? 'Valid email required' : null,
-              ),
-              TextFormField(
-                controller: contactCtrl,
-                decoration: const InputDecoration(labelText: 'Contact Phone *'),
-                validator: (v) => v == null || v.length < 10 ? 'At least 10 digits' : null,
-              ),
-              TextFormField(
-                controller: qualCtrl,
-                decoration: const InputDecoration(labelText: 'Qualification *'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Qualification required' : null,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final data = {
-                  'name': nameCtrl.text.trim(),
-                  'email': emailCtrl.text.trim(),
-                  'contact': contactCtrl.text.trim(),
-                  'qualification': qualCtrl.text.trim(),
-                };
-                final tp = Provider.of<TeacherProvider>(context, listen: false);
-                final success = teacher != null ? await tp.updateTeacher(teacher.id, data) : await tp.createTeacher(data);
-                if (mounted) {
-                  if (success) {
-                    Provider.of<DashboardProvider>(context, listen: false).fetchDashboardData();
-                  }
-                  Navigator.pop(ctx);
-                }
-              }
-            },
-            child: const Text('Save'),
+    Widget buildFormField({
+      required String label,
+      required TextEditingController controller,
+      required String hint,
+      String? Function(String?)? validator,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.accent)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              isDense: true,
+            ),
+            validator: validator,
           ),
         ],
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        teacher != null ? 'Edit Teacher' : 'Add Teacher',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text('Enter faculty member information and contact details', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  const Divider(height: 24, color: AppColors.cardBorder),
+                  buildFormField(
+                    label: 'Teacher Name *',
+                    controller: nameCtrl,
+                    hint: 'e.g. Ms. Shreya Kansara',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Name required' : null,
+                  ),
+                  const SizedBox(height: 14),
+                  buildFormField(
+                    label: 'Email Address *',
+                    controller: emailCtrl,
+                    hint: 'teacher@school.edu',
+                    validator: (v) => v == null || !v.contains('@') ? 'Valid email required' : null,
+                  ),
+                  const SizedBox(height: 14),
+                  buildFormField(
+                    label: 'Contact Phone *',
+                    controller: contactCtrl,
+                    hint: '10-digit mobile number',
+                    validator: (v) => v == null || v.length < 10 ? 'At least 10 digits' : null,
+                  ),
+                  const SizedBox(height: 14),
+                  buildFormField(
+                    label: 'Qualification *',
+                    controller: qualCtrl,
+                    hint: 'e.g. M.Sc. B.Ed., M.Tech',
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Qualification required' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: const BorderSide(color: AppColors.cardBorder),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final data = {
+                              'name': nameCtrl.text.trim(),
+                              'email': emailCtrl.text.trim(),
+                              'contact': contactCtrl.text.trim(),
+                              'qualification': qualCtrl.text.trim(),
+                            };
+                            final tp = Provider.of<TeacherProvider>(context, listen: false);
+                            final success = teacher != null ? await tp.updateTeacher(teacher.id, data) : await tp.createTeacher(data);
+                            if (mounted) {
+                              if (success) {
+                                Provider.of<DashboardProvider>(context, listen: false).fetchDashboardData();
+                              }
+                              Navigator.pop(ctx);
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Save Teacher'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -139,7 +217,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                     ElevatedButton.icon(
                       onPressed: () => _showTeacherDialog(),
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('+ Add Teacher'),
+                      label: const Text('Add Teacher'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: Colors.white,

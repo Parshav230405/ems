@@ -427,6 +427,8 @@ class _AppShellState extends State<AppShell> {
             ),
           ),
 
+          const SizedBox(width: 16),
+
           if (user?.isSuperAdmin == true) ...[
             OutlinedButton.icon(
               onPressed: () {

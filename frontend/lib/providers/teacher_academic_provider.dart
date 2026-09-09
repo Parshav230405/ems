@@ -263,4 +263,66 @@ class AcademicProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // Timetable State & Methods
+  List<dynamic> _timetableEntries = [];
+  bool _isTimetableLoading = false;
+
+  List<dynamic> get timetableEntries => _timetableEntries;
+  bool get isTimetableLoading => _isTimetableLoading;
+
+  Future<void> fetchTimetable(String classId) async {
+    _isTimetableLoading = true;
+    notifyListeners();
+
+    try {
+      final res = await _api.get('/timetable', queryParams: {'classId': classId});
+      _timetableEntries = res['data'] ?? [];
+      _isTimetableLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isTimetableLoading = false;
+      _timetableEntries = [];
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<bool> saveTimetableEntry({
+    required String classId,
+    required String dayOfWeek,
+    required int period,
+    required String subjectId,
+    String? startTime,
+    String? endTime,
+  }) async {
+    try {
+      await _api.post('/timetable', {
+        'classId': classId,
+        'dayOfWeek': dayOfWeek,
+        'period': period,
+        'subjectId': subjectId,
+        'startTime': startTime,
+        'endTime': endTime,
+      });
+      await fetchTimetable(classId);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteTimetableEntry(String id, String classId) async {
+    try {
+      await _api.delete('/timetable/$id');
+      await fetchTimetable(classId);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

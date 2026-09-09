@@ -70,4 +70,19 @@ export class TimetableController {
       res.status(500).json({ error: err.message });
     }
   }
+
+  public static async deleteEntry(req: Request, res: Response): Promise<void> {
+    try {
+      const clientId = getTenantId(req);
+      const { id } = req.params;
+
+      await prisma.timetable.deleteMany({
+        where: { id, clientId },
+      });
+
+      res.status(200).json({ message: 'Timetable entry deleted successfully' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
 }

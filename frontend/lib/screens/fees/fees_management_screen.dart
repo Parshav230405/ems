@@ -36,58 +36,116 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
+        builder: (ctx, setState) => Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Record Fee Payment'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: amountCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Amount (INR) *'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: mode,
-                decoration: const InputDecoration(labelText: 'Payment Mode'),
-                items: ['CASH', 'UPI', 'CHEQUE', 'BANK_TRANSFER', 'ONLINE']
-                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                    .toList(),
-                onChanged: (v) => setState(() => mode = v ?? 'CASH'),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: notesCtrl,
-                decoration: const InputDecoration(labelText: 'Notes / Remarks'),
-              ),
-            ],
-          ),
-          actions: [
-            OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () async {
-                final amt = double.tryParse(amountCtrl.text.trim());
-                if (amt != null && amt > 0) {
-                  final fp = Provider.of<FeesProvider>(context, listen: false);
-                  final success = await fp.recordPayment(studentId: studentId, amountPaid: amt, mode: mode, notes: notesCtrl.text.trim());
-                  if (mounted) {
-                    Navigator.pop(ctx);
-                    if (success) {
-                      Provider.of<DashboardProvider>(context, listen: false).fetchDashboardData();
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(success ? 'Payment of ₹ ${amt.toStringAsFixed(0)} recorded successfully!' : 'Failed to record payment'),
-                        backgroundColor: success ? AppColors.success : AppColors.danger,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Record Fee Payment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      IconButton(icon: const Icon(Icons.close_rounded, size: 20), onPressed: () => Navigator.pop(ctx)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text('Enter amount paid and select payment mode for student', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  const Divider(height: 24, color: AppColors.cardBorder),
+                  const Text('Amount (INR) *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: amountCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. 5000',
+                      prefixText: '₹ ',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Payment Mode', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    value: mode,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      isDense: true,
+                    ),
+                    items: ['CASH', 'UPI', 'CHEQUE', 'BANK_TRANSFER', 'ONLINE']
+                        .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                        .toList(),
+                    onChanged: (v) => setState(() => mode = v ?? 'CASH'),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Notes / Remarks', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: notesCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Receipt #104 - Term 1 fee',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: const BorderSide(color: AppColors.cardBorder),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Cancel'),
                       ),
-                    );
-                  }
-                }
-              },
-              child: const Text('Record Payment'),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final amt = double.tryParse(amountCtrl.text.trim());
+                          if (amt != null && amt > 0) {
+                            final fp = Provider.of<FeesProvider>(context, listen: false);
+                            final success = await fp.recordPayment(studentId: studentId, amountPaid: amt, mode: mode, notes: notesCtrl.text.trim());
+                            if (mounted) {
+                              Navigator.pop(ctx);
+                              if (success) {
+                                Provider.of<DashboardProvider>(context, listen: false).fetchDashboardData();
+                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'Payment of ₹ ${amt.toStringAsFixed(0)} recorded successfully!' : 'Failed to record payment'),
+                                  backgroundColor: success ? AppColors.success : AppColors.danger,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Record Payment'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -220,7 +278,7 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
                               (studentData['pendingFee'] as num).toDouble(),
                             ),
                             icon: const Icon(Icons.add_rounded, size: 16),
-                            label: const Text('+ Add Payment'),
+                            label: const Text('Add Payment'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.accent,
                               foregroundColor: Colors.white,

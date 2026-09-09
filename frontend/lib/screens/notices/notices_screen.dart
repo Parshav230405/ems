@@ -39,33 +39,92 @@ class _NoticesScreenState extends State<NoticesScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Publish New Notice'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Notice Title *')),
-            const SizedBox(height: 12),
-            TextField(controller: bodyCtrl, maxLines: 4, decoration: const InputDecoration(labelText: 'Notice Content *')),
-          ],
-        ),
-        actions: [
-          OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (titleCtrl.text.trim().isNotEmpty && bodyCtrl.text.trim().isNotEmpty) {
-                await _api.post('/notices', {
-                  'title': titleCtrl.text.trim(),
-                  'body': bodyCtrl.text.trim(),
-                });
-                if (mounted) Navigator.pop(ctx);
-                _fetchNotices();
-              }
-            },
-            child: const Text('Publish Notice'),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Publish New Notice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    IconButton(icon: const Icon(Icons.close_rounded, size: 20), onPressed: () => Navigator.pop(ctx)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text('Broadcast announcements and circulars to students and staff', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                const Divider(height: 24, color: AppColors.cardBorder),
+                const Text('Notice Title *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: titleCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Sports Day Announcement',
+                    hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text('Notice Content *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: bodyCtrl,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: 'Enter full circular details, date, and instructions...',
+                    hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(color: AppColors.cardBorder),
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (titleCtrl.text.trim().isNotEmpty && bodyCtrl.text.trim().isNotEmpty) {
+                          await _api.post('/notices', {
+                            'title': titleCtrl.text.trim(),
+                            'body': bodyCtrl.text.trim(),
+                          });
+                          if (mounted) Navigator.pop(ctx);
+                          _fetchNotices();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Publish Notice'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -99,7 +158,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ElevatedButton.icon(
                     onPressed: _showAddNoticeDialog,
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('+ Add Notice'),
+                    label: const Text('Add Notice'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accent,
                       foregroundColor: Colors.white,

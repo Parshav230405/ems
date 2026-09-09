@@ -34,58 +34,154 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     String? teacherId = teachers.isNotEmpty ? teachers.first.id : null;
     final formKey = GlobalKey<FormState>();
 
+    Widget buildFormField({
+      required String label,
+      required TextEditingController controller,
+      required String hint,
+      String? Function(String?)? validator,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.accent)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              isDense: true,
+            ),
+            validator: validator,
+          ),
+        ],
+      );
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
+        builder: (ctx, setState) => Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Add Course / Subject'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Subject Name * (e.g. Science)'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Subject name required' : null,
-                ),
-                TextFormField(
-                  controller: codeCtrl,
-                  decoration: const InputDecoration(labelText: 'Subject Code (e.g. SCI10)'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: classId,
-                  decoration: const InputDecoration(labelText: 'Class *'),
-                  items: academic.classes.map((c) => DropdownMenuItem(value: c.id, child: Text('${c.name}-${c.division}'))).toList(),
-                  onChanged: (v) => setState(() => classId = v),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: teacherId,
-                  decoration: const InputDecoration(labelText: 'Assign Faculty'),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('None (Unassigned)')),
-                    ...teachers.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Add Course / Subject',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('Configure subject title, course code, and faculty assignment', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    const Divider(height: 24, color: AppColors.cardBorder),
+                    buildFormField(
+                      label: 'Subject Name *',
+                      controller: nameCtrl,
+                      hint: 'e.g. Mathematics, Science',
+                      validator: (v) => v == null || v.trim().isEmpty ? 'Subject name required' : null,
+                    ),
+                    const SizedBox(height: 14),
+                    buildFormField(
+                      label: 'Subject Code',
+                      controller: codeCtrl,
+                      hint: 'e.g. MTH10, SCI10',
+                    ),
+                    const SizedBox(height: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Class *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          value: classId,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            isDense: true,
+                          ),
+                          items: academic.classes.map((c) => DropdownMenuItem(value: c.id, child: Text('Class ${c.name} - ${c.division}'))).toList(),
+                          onChanged: (v) => setState(() => classId = v),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Assign Faculty (Optional)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          value: teacherId,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.cardBorder)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            isDense: true,
+                          ),
+                          items: [
+                            const DropdownMenuItem(value: null, child: Text('None (Unassigned)')),
+                            ...teachers.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))),
+                          ],
+                          onChanged: (v) => setState(() => teacherId = v),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            side: const BorderSide(color: AppColors.cardBorder),
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (formKey.currentState!.validate() && classId != null) {
+                              await academic.createSubject(nameCtrl.text.trim(), codeCtrl.text.trim(), classId!, teacherId);
+                              if (mounted) Navigator.pop(ctx);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accent,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Text('Add Subject'),
+                        ),
+                      ],
+                    ),
                   ],
-                  onChanged: (v) => setState(() => teacherId = v),
                 ),
-              ],
+              ),
             ),
           ),
-          actions: [
-            OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () async {
-                if (formKey.currentState!.validate() && classId != null) {
-                  await academic.createSubject(nameCtrl.text.trim(), codeCtrl.text.trim(), classId!, teacherId);
-                  if (mounted) Navigator.pop(ctx);
-                }
-              },
-              child: const Text('Add Subject'),
-            ),
-          ],
         ),
       ),
     );
@@ -130,7 +226,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     ElevatedButton.icon(
                       onPressed: _showAddSubjectDialog,
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('+ Add Subject'),
+                      label: const Text('Add Subject'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: Colors.white,

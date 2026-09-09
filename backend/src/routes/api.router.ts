@@ -252,6 +252,13 @@ router.post(
   validateBody(timetableSchema),
   TimetableController.saveEntry
 );
+router.delete(
+  '/timetable/:id',
+  authenticateToken,
+  requireSchoolTenant,
+  requireRole([Role.ADMIN]),
+  TimetableController.deleteEntry
+);
 
 // --- Notices ---
 router.get('/notices', authenticateToken, requireSchoolTenant, NoticesController.listNotices);
