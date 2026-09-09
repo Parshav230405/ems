@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiException implements Exception {
@@ -15,9 +16,23 @@ class ApiException implements Exception {
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
-  ApiService._internal();
+  ApiService._internal() {
+    baseUrl = defaultBaseUrl;
+  }
 
-  String baseUrl = 'http://localhost:5000/api';
+  static String get defaultBaseUrl {
+    if (kIsWeb) {
+      final origin = Uri.base.origin;
+      if (origin.isNotEmpty && !origin.startsWith('file://')) {
+        if (Uri.base.host != 'localhost' && Uri.base.host != '127.0.0.1') {
+          return '$origin/api';
+        }
+      }
+    }
+    return const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:5000/api');
+  }
+
+  late String baseUrl;
   String? _token;
 
   void setToken(String? token) {
