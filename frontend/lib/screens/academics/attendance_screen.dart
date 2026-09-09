@@ -157,6 +157,31 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       },
                     ),
                   ),
+
+                  const Spacer(),
+
+                  // Quick Action: Mark All Present
+                  if (academic.attendanceList.isNotEmpty)
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        for (int i = 0; i < academic.attendanceList.length; i++) {
+                          academic.updateStudentAttendanceStatus(i, 'PRESENT');
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Marked all students as Present'),
+                            duration: Duration(seconds: 1),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.done_all_rounded, size: 16, color: AppColors.success),
+                      label: const Text('Mark All Present', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.success),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      ),
+                    ),
                 ],
               ),
             ),

@@ -490,16 +490,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Bottom Security Note
                             Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(Icons.lock_rounded, size: 14, color: Color(0xFF94A3B8)),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    '256-bit SSL Secure • Multi-Tenant Protected',
-                                    style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
-                                  ),
-                                ],
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(Icons.lock_rounded, size: 14, color: Color(0xFF94A3B8)),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      '256-bit SSL Secure • Multi-Tenant Protected',
+                                      style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],

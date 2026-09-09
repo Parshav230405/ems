@@ -4,7 +4,7 @@ module.exports = {
   testMatch: ['**/tests/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   transform: {
-    '^.+\\.ts$': ['ts-jest', { tsconfig: { esModuleInterop: true } }],
+    '^.+\\.ts$': ['ts-jest', { tsconfig: { esModuleInterop: true, types: ['node', 'jest'] } }],
   },
   verbose: true,
   testTimeout: 30000,

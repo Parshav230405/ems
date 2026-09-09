@@ -183,6 +183,18 @@ class AcademicProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> deleteSubject(String id, {String? classId}) async {
+    try {
+      await _api.delete('/subjects/$id');
+      await fetchSubjects(classId: classId);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   // Attendance methods
   void setAttendanceDate(DateTime date) {
     _selectedDate = date;

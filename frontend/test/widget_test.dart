@@ -12,7 +12,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Login to Your Account'), findsOneWidget);
-    expect(find.text('Username / Email'), findsOneWidget);
+    expect(find.text('Email Address / Username'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
   });
 }

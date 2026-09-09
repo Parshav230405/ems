@@ -91,16 +91,25 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: () {},
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Timetable updated for selected class'),
+                              duration: Duration(seconds: 1),
+                              backgroundColor: AppColors.primary,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.refresh, size: 16),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accent,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
-                        child: const Text('View'),
+                        label: const Text('Refresh'),
                       ),
                     ],
                   ),

@@ -193,6 +193,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                   DataColumn(label: Text('Subject Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                   DataColumn(label: Text('Assigned Class', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                   DataColumn(label: Text('Assigned Teacher', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                  DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                 ],
                 rows: academic.subjects.map((sub) {
                   return DataRow(
@@ -208,6 +209,34 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                             Text(sub.teacherName ?? 'Unassigned', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
                           ],
                         ),
+                      ),
+                      DataCell(
+                        auth.isAdmin
+                            ? IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                                tooltip: 'Delete Subject',
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Delete Subject'),
+                                      content: Text('Are you sure you want to delete ${sub.name}?'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+                                          child: const Text('Delete', style: TextStyle(color: Colors.white)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true) {
+                                    await academic.deleteSubject(sub.id, classId: _filterClassId);
+                                  }
+                                },
+                              )
+                            : const SizedBox.shrink(),
                       ),
                     ],
                   );
