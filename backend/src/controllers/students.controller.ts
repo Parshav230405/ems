@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../config/db';
 import { StudentStatus } from '@prisma/client';
 import { getTenantId, sanitizeTenantInput } from '../utils/tenant.util';
+import { parseFlexibleDateString } from '../validators/schemas';
 
 export class StudentsController {
   public static async listStudents(req: Request, res: Response): Promise<void> {
@@ -162,19 +163,19 @@ export class StudentsController {
 
       // Auto-generate admission number if not specified (scoped to tenant)
       if (!admissionNumber) {
-        const lastStudent = await prisma.student.findFirst({
-          where: { clientId },
-          orderBy: { admissionNumber: 'desc' },
+        const existingStudents = await prisma.student.findMany({
+          where: { clientId, admissionNumber: { startsWith: 'ADM' } },
+          select: { admissionNumber: true },
         });
 
-        let nextNum = 1;
-        if (lastStudent && lastStudent.admissionNumber.startsWith('ADM')) {
-          const numPart = parseInt(lastStudent.admissionNumber.replace('ADM', ''), 10);
-          if (!isNaN(numPart)) {
-            nextNum = numPart + 1;
+        let maxNum = 0;
+        for (const s of existingStudents) {
+          const num = parseInt(s.admissionNumber.replace('ADM', ''), 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
           }
         }
-        admissionNumber = `ADM${String(nextNum).padStart(3, '0')}`;
+        admissionNumber = `ADM${String(maxNum + 1).padStart(3, '0')}`;
       }
 
       const existingAdm = await prisma.student.findFirst({
@@ -185,18 +186,21 @@ export class StudentsController {
         return;
       }
 
+      const parsedDob = parseFlexibleDateString(dob) || new Date(dob);
+      const parsedAdmissionDate = admissionDate ? (parseFlexibleDateString(admissionDate) || new Date(admissionDate)) : new Date();
+
       const student = await prisma.student.create({
         data: {
           clientId,
           admissionNumber,
-          name,
-          dob: new Date(dob),
+          name: name.trim(),
+          dob: parsedDob,
           gender: gender || 'Other',
           classId,
-          parentName,
-          parentContact,
-          parentEmail: parentEmail || null,
-          admissionDate: admissionDate ? new Date(admissionDate) : new Date(),
+          parentName: parentName.trim(),
+          parentContact: parentContact.trim(),
+          parentEmail: parentEmail && parentEmail.trim().length > 0 ? parentEmail.trim() : null,
+          admissionDate: parsedAdmissionDate,
           status: status || StudentStatus.ACTIVE,
         },
         include: {
@@ -228,8 +232,15 @@ export class StudentsController {
       }
 
       const data: any = { ...cleanBody };
-      if (data.dob) data.dob = new Date(data.dob);
-      if (data.admissionDate) data.admissionDate = new Date(data.admissionDate);
+      if (data.dob) {
+        data.dob = parseFlexibleDateString(data.dob) || new Date(data.dob);
+      }
+      if (data.admissionDate) {
+        data.admissionDate = parseFlexibleDateString(data.admissionDate) || new Date(data.admissionDate);
+      }
+      if (data.parentEmail !== undefined) {
+        data.parentEmail = data.parentEmail && data.parentEmail.trim().length > 0 ? data.parentEmail.trim() : null;
+      }
 
       const updated = await prisma.student.update({
         where: { id },

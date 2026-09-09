@@ -27,6 +27,33 @@ export const teacherCreateSchema = z.object({
   status: z.string().default('Active'),
 });
 
+// Helper to validate and parse flexible date formats (YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY, ISO)
+export const parseFlexibleDateString = (str: any): Date | null => {
+  if (!str || typeof str !== 'string') return null;
+  const s = str.trim();
+  const ddmmyyyy = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (ddmmyyyy) {
+    const [, day, month, year] = ddmmyyyy;
+    const d = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+    if (!isNaN(d.getTime())) return d;
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d;
+  return null;
+};
+
+export const flexibleDateSchema = z.string().refine((val) => parseFlexibleDateString(val) !== null, {
+  message: 'Valid date required (e.g. YYYY-MM-DD or DD/MM/YYYY)',
+});
+
+export const optionalEmailSchema = z
+  .string()
+  .trim()
+  .email('Invalid email address format')
+  .optional()
+  .nullable()
+  .or(z.literal(''));
+
 export const subjectCreateSchema = z.object({
   name: z.string().min(2, 'Subject name is required'),
   code: z.string().optional(),
@@ -35,15 +62,15 @@ export const subjectCreateSchema = z.object({
 });
 
 export const studentCreateSchema = z.object({
-  name: z.string().min(2, 'Student name is required'),
-  admissionNumber: z.string().optional(), // Auto-generated if not provided
-  dob: z.string().refine((val) => !isNaN(Date.parse(val)), 'Valid date of birth required'),
-  gender: z.string().min(1, 'Gender is required'),
+  name: z.string().trim().min(1, 'Student name is required'),
+  admissionNumber: z.string().trim().optional(), // Auto-generated if not provided
+  dob: flexibleDateSchema,
+  gender: z.string().trim().min(1, 'Gender is required'),
   classId: z.string().uuid('Valid Class ID is required'),
-  parentName: z.string().min(2, 'Parent name is required'),
-  parentContact: z.string().min(10, 'Parent contact must be at least 10 digits'),
-  parentEmail: z.string().email('Invalid parent email').optional().nullable(),
-  admissionDate: z.string().optional(),
+  parentName: z.string().trim().min(1, 'Parent name is required'),
+  parentContact: z.string().trim().min(7, 'Parent contact must be at least 7 digits'),
+  parentEmail: optionalEmailSchema,
+  admissionDate: z.string().refine((val) => parseFlexibleDateString(val) !== null, 'Valid admission date').optional().nullable().or(z.literal('')),
   status: z.nativeEnum(StudentStatus).default(StudentStatus.ACTIVE),
 });
 

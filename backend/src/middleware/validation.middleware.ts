@@ -12,8 +12,10 @@ export const validateBody = (schema: ZodSchema) => {
           field: e.path.join('.'),
           message: e.message,
         }));
+        const summary = errors.map((e) => `${e.field ? e.field + ': ' : ''}${e.message}`).join(', ');
         res.status(400).json({
           error: 'Validation failed',
+          message: `Validation failed (${summary})`,
           details: errors,
         });
         return;
@@ -34,8 +36,10 @@ export const validateQuery = (schema: ZodSchema) => {
           field: e.path.join('.'),
           message: e.message,
         }));
+        const summary = errors.map((e) => `${e.field ? e.field + ': ' : ''}${e.message}`).join(', ');
         res.status(400).json({
           error: 'Validation failed',
+          message: `Validation failed (${summary})`,
           details: errors,
         });
         return;

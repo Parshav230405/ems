@@ -69,13 +69,130 @@ class _StudentFormDialogState extends State<StudentFormDialog> {
     super.dispose();
   }
 
+  Future<void> _selectDob() async {
+    DateTime initialDate = DateTime(2012, 5, 15);
+    final current = _dobController.text.trim();
+    if (current.isNotEmpty) {
+      final parts = current.split(RegExp(r'[-/]'));
+      if (parts.length == 3) {
+        if (parts[0].length == 4) {
+          final y = int.tryParse(parts[0]);
+          final m = int.tryParse(parts[1]);
+          final d = int.tryParse(parts[2]);
+          if (y != null && m != null && d != null) initialDate = DateTime(y, m, d);
+        } else if (parts[2].length == 4) {
+          final d = int.tryParse(parts[0]);
+          final m = int.tryParse(parts[1]);
+          final y = int.tryParse(parts[2]);
+          if (y != null && m != null && d != null) initialDate = DateTime(y, m, d);
+        }
+      }
+    }
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1990),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dobController.text =
+            "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      });
+    }
+  }
+
+  void _showQuickCreateClassDialog() {
+    final nameCtrl = TextEditingController(text: '10');
+    final divCtrl = TextEditingController(text: 'A');
+    final yearCtrl = TextEditingController(text: '2025-2026');
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Add Class & Division'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Class / Grade * (e.g. 10)'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Class required' : null,
+              ),
+              TextFormField(
+                controller: divCtrl,
+                decoration: const InputDecoration(labelText: 'Division / Section * (e.g. A)'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Division required' : null,
+              ),
+              TextFormField(
+                controller: yearCtrl,
+                decoration: const InputDecoration(labelText: 'Academic Year * (e.g. 2025-2026)'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Year required' : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final created = await Provider.of<AcademicProvider>(context, listen: false).createClass(
+                  nameCtrl.text.trim(),
+                  divCtrl.text.trim(),
+                  yearCtrl.text.trim(),
+                );
+                if (mounted) {
+                  Navigator.pop(ctx);
+                  if (created) {
+                    await Provider.of<AcademicProvider>(context, listen: false).fetchClasses();
+                    final updatedClasses = Provider.of<AcademicProvider>(context, listen: false).classes;
+                    if (updatedClasses.isNotEmpty) {
+                      setState(() {
+                        _selectedClassId = updatedClasses.last.id;
+                      });
+                    }
+                  }
+                }
+              }
+            },
+            child: const Text('Create Class'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedClassId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a class'), backgroundColor: AppColors.danger),
+        const SnackBar(content: Text('Please select a class before saving student'), backgroundColor: AppColors.danger),
       );
       return;
+    }
+
+    final rawEmail = _parentEmailController.text.trim();
+    if (rawEmail.isNotEmpty && !RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(rawEmail)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address (e.g. parent@example.com) or leave it blank'), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+
+    String rawDob = _dobController.text.trim();
+    final ddmmyyyy = RegExp(r'^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$').firstMatch(rawDob);
+    if (ddmmyyyy != null) {
+      final day = ddmmyyyy.group(1)!.padLeft(2, '0');
+      final month = ddmmyyyy.group(2)!.padLeft(2, '0');
+      final year = ddmmyyyy.group(3)!;
+      rawDob = '$year-$month-$day';
     }
 
     setState(() => _isSubmitting = true);
@@ -84,13 +201,13 @@ class _StudentFormDialogState extends State<StudentFormDialog> {
       'name': _nameController.text.trim(),
       if (_admissionNoController.text.trim().isNotEmpty)
         'admissionNumber': _admissionNoController.text.trim(),
-      'dob': _dobController.text.trim(),
+      'dob': rawDob,
       'gender': _gender,
       'classId': _selectedClassId,
       'parentName': _parentNameController.text.trim(),
       'parentContact': _parentContactController.text.trim(),
-      if (_parentEmailController.text.trim().isNotEmpty)
-        'parentEmail': _parentEmailController.text.trim(),
+      if (rawEmail.isNotEmpty)
+        'parentEmail': rawEmail,
       'status': _status,
     };
 
@@ -171,6 +288,40 @@ class _StudentFormDialogState extends State<StudentFormDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (classes.isEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.amber.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline_rounded, color: Colors.orange, size: 20),
+                                const SizedBox(width: 10),
+                                const Expanded(
+                                  child: Text(
+                                    'No classes found for this school yet. Please create a class first.',
+                                    style: TextStyle(fontSize: 12, color: Colors.brown, fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: _showQuickCreateClassDialog,
+                                  icon: const Icon(Icons.add_rounded, size: 16),
+                                  label: const Text('Add Class', style: TextStyle(fontSize: 12)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.accent,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    elevation: 0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
                         // Personal Information Section
                         const Text(
                           'Personal Information',
@@ -207,7 +358,12 @@ class _StudentFormDialogState extends State<StudentFormDialog> {
                               child: _buildTextField(
                                 label: 'Date of Birth *',
                                 controller: _dobController,
-                                hint: 'YYYY-MM-DD',
+                                hint: 'YYYY-MM-DD or DD/MM/YYYY',
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.calendar_month_rounded, size: 20, color: AppColors.primary),
+                                  onPressed: _selectDob,
+                                  tooltip: 'Pick date from calendar',
+                                ),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'DOB is required' : null,
                               ),
                             ),
@@ -240,7 +396,20 @@ class _StudentFormDialogState extends State<StudentFormDialog> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Class *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Class *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                      if (classes.isNotEmpty)
+                                        InkWell(
+                                          onTap: _showQuickCreateClassDialog,
+                                          child: const Text(
+                                            '+ Add Class',
+                                            style: TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                   const SizedBox(height: 6),
                                   DropdownButtonFormField<String>(
                                     value: _selectedClassId,
@@ -369,6 +538,7 @@ class _StudentFormDialogState extends State<StudentFormDialog> {
     required TextEditingController controller,
     required String hint,
     String? Function(String?)? validator,
+    Widget? suffixIcon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,16 +547,17 @@ class _StudentFormDialogState extends State<StudentFormDialog> {
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
-          decoration: _inputDecoration(hint),
+          decoration: _inputDecoration(hint, suffixIcon: suffixIcon),
           validator: validator,
         ),
       ],
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
+  InputDecoration _inputDecoration(String hint, {Widget? suffixIcon}) {
     return InputDecoration(
       hintText: hint,
+      suffixIcon: suffixIcon,
       hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

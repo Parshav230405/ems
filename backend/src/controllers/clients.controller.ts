@@ -135,6 +135,15 @@ export class ClientsController {
           ],
         });
 
+        // Initialize default starter classes so the school is immediately operational
+        await tx.class.createMany({
+          data: [
+            { clientId: newClient.id, name: '10', division: 'A', academicYear: '2025-2026' },
+            { clientId: newClient.id, name: '9', division: 'A', academicYear: '2025-2026' },
+            { clientId: newClient.id, name: '8', division: 'A', academicYear: '2025-2026' },
+          ],
+        });
+
         return { client: newClient, admin: newAdmin };
       });
 

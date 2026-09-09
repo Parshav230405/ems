@@ -10,7 +10,22 @@ class ApiException implements Exception {
   ApiException(this.message, {this.statusCode = 500, this.details});
 
   @override
-  String toString() => message;
+  String toString() {
+    if (details != null && details!.isNotEmpty) {
+      final detailStrings = details!.map((d) {
+        if (d is Map && d.containsKey('field') && d.containsKey('message')) {
+          final f = d['field']?.toString() ?? '';
+          final m = d['message']?.toString() ?? '';
+          return f.isNotEmpty ? '$f: $m' : m;
+        }
+        return d.toString();
+      }).join(', ');
+      if (!message.contains(detailStrings)) {
+        return '$message ($detailStrings)';
+      }
+    }
+    return message;
+  }
 }
 
 class ApiService {
@@ -131,9 +146,11 @@ class ApiService {
       return decoded;
     }
 
-    final errorMessage = decoded is Map && decoded.containsKey('error')
-        ? decoded['error']
-        : 'Request failed with status: ${response.statusCode}';
+    final errorMessage = decoded is Map && decoded.containsKey('message') && decoded['message'] != null
+        ? decoded['message']
+        : (decoded is Map && decoded.containsKey('error') && decoded['error'] != null
+            ? decoded['error']
+            : 'Request failed with status: ${response.statusCode}');
 
     final details = decoded is Map && decoded.containsKey('details') ? decoded['details'] : null;
 
