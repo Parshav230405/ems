@@ -1,0 +1,287 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  STAFF
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LEAVE
+}
+
+enum PaymentMode {
+  CASH
+  CHEQUE
+  UPI
+  BANK_TRANSFER
+  ONLINE
+}
+
+model Client {
+  id           Int            @id @default(autoincrement())
+  name         String
+  slug         String         @unique
+  status       String         @default("active") // active, suspended, deleted
+  adminEmail   String?
+  createdAt    DateTime       @default(now())
+  users        User[]
+  students     Student[]
+  teachers     Teacher[]
+  classes      Class[]
+  subjects     Subject[]
+  attendance   Attendance[]
+  exams        Exam[]
+  marks        Mark[]
+  feeStructure FeeStructure[]
+  feePayments  FeePayment[]
+  notices      Notice[]
+  timetable    Timetable[]
+  certificates Certificate[]
+  settings     Setting[]
+
+  @@map("clients")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  clientId     Int           @map("client_id")
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         Role          @default(STAFF)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  client       Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  notices      Notice[]
+  certificates Certificate[]
+
+  @@map("users")
+}
+
+model Class {
+  id           String         @id @default(uuid())
+  clientId     Int            @map("client_id")
+  name         String
+  division     String
+  academicYear String
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  students     Student[]
+  subjects     Subject[]
+  exams        Exam[]
+  feeStructure FeeStructure[]
+  timetable    Timetable[]
+  notices      Notice[]
+
+  @@unique([clientId, name, division, academicYear])
+  @@map("classes")
+}
+
+model Teacher {
+  id            String    @id @default(uuid())
+  clientId      Int       @map("client_id")
+  name          String
+  email         String
+  contact       String
+  qualification String    @default("Bachelor of Education")
+  status        String    @default("Active")
+  createdAt     DateTime  @default(now())
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  subjects      Subject[]
+
+  @@unique([clientId, email])
+  @@map("teachers")
+}
+
+model Subject {
+  id        String      @id @default(uuid())
+  clientId  Int         @map("client_id")
+  name      String
+  code      String?
+  classId   String
+  teacherId String?
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  class     Class       @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher   Teacher?    @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  exams     Exam[]
+  timetable Timetable[]
+
+  @@map("subjects")
+}
+
+model Student {
+  id              String        @id @default(uuid())
+  clientId        Int           @map("client_id")
+  admissionNumber String
+  name            String
+  dob             DateTime
+  gender          String        @default("Other")
+  classId         String
+  parentName      String
+  parentContact   String
+  parentEmail     String?
+  admissionDate   DateTime      @default(now())
+  status          StudentStatus @default(ACTIVE)
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  class           Class         @relation(fields: [classId], references: [id], onDelete: Restrict)
+  attendance      Attendance[]
+  marks           Mark[]
+  feePayments     FeePayment[]
+  certificates    Certificate[]
+
+  @@unique([clientId, admissionNumber])
+  @@map("students")
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  clientId  Int              @map("client_id")
+  studentId String
+  date      DateTime         @db.Date
+  status    AttendanceStatus @default(PRESENT)
+  markedBy  String?
+  client    Client           @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, studentId, date])
+  @@map("attendance")
+}
+
+model Exam {
+  id        String   @id @default(uuid())
+  clientId  Int      @map("client_id")
+  name      String
+  classId   String
+  subjectId String
+  date      DateTime
+  maxMarks  Int      @default(100)
+  passMarks Int      @default(35)
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  marks     Mark[]
+
+  @@map("exams")
+}
+
+model Mark {
+  id            String  @id @default(uuid())
+  clientId      Int     @map("client_id")
+  examId        String
+  studentId     String
+  marksObtained Decimal @db.Decimal(5, 2)
+  client        Client  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  exam          Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, examId, studentId])
+  @@map("marks")
+}
+
+model FeeStructure {
+  id           String   @id @default(uuid())
+  clientId     Int      @map("client_id")
+  classId      String
+  academicYear String
+  title        String   @default("Annual Tuition Fee")
+  amount       Decimal  @db.Decimal(10, 2)
+  dueDate      DateTime
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  class        Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@map("fee_structure")
+}
+
+model FeePayment {
+  id          String      @id @default(uuid())
+  clientId    Int         @map("client_id")
+  studentId   String
+  amountPaid  Decimal     @db.Decimal(10, 2)
+  paymentDate DateTime    @default(now())
+  mode        PaymentMode @default(CASH)
+  receiptNo   String
+  notes       String?
+  receivedBy  String?
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  student     Student     @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([clientId, receiptNo])
+  @@map("fee_payments")
+}
+
+model Notice {
+  id         String   @id @default(uuid())
+  clientId   Int      @map("client_id")
+  title      String
+  body       String
+  postedBy   String
+  postedDate DateTime @default(now())
+  classId    String?
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  user       User     @relation(fields: [postedBy], references: [id], onDelete: Cascade)
+  class      Class?   @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  @@map("notices")
+}
+
+model Timetable {
+  id        String  @id @default(uuid())
+  clientId  Int     @map("client_id")
+  classId   String
+  dayOfWeek String
+  period    Int
+  subjectId String
+  startTime String?
+  endTime   String?
+  client    Client  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, classId, dayOfWeek, period])
+  @@map("timetable")
+}
+
+model Certificate {
+  id            String   @id @default(uuid())
+  clientId      Int      @map("client_id")
+  studentId     String
+  type          String
+  title         String   @default("CERTIFICATE OF ACHIEVEMENT")
+  body          String
+  issuedDate    DateTime @default(now())
+  issuedBy      String
+  templateId    String   @default("institutional_letterhead_v1")
+  certificateNo String
+  pdfUrl        String?
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  issuer        User     @relation(fields: [issuedBy], references: [id], onDelete: Restrict)
+
+  @@unique([clientId, certificateNo])
+  @@map("certificates")
+}
+
+model Setting {
+  clientId  Int      @map("client_id")
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@id([clientId, key])
+  @@map("settings")
+}
