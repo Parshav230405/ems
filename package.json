@@ -6,7 +6,8 @@
   "scripts": {
     "build": "cd backend && npm install --include=dev && npm run build",
     "start": "cd backend && npm start",
-    "db:push": "cd backend && npx prisma db push",
+    "render:build": "npm run build && cd backend && npx prisma db push --accept-data-loss --force-reset && npm run prisma:seed",
+    "db:push": "cd backend && npx prisma db push --accept-data-loss",
     "db:seed": "cd backend && npm run prisma:seed",
     "postinstall": "cd backend && npm install --include=dev"
   }

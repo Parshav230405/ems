@@ -9,7 +9,7 @@
     "dev": "ts-node src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:push": "prisma db push",
+    "prisma:push": "prisma db push --accept-data-loss",
     "prisma:seed": "ts-node --transpile-only prisma/seed.ts",
     "db:backup": "ts-node --transpile-only src/scripts/backup.ts",
     "db:restore": "ts-node --transpile-only src/scripts/restore.ts",
