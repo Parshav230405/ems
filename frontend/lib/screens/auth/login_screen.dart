@@ -12,11 +12,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'admin@auraems.com');
-  final _passwordController = TextEditingController(text: 'Admin@123');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _rememberMe = true;
   bool _obscurePassword = true;
-  String _selectedRole = 'School Admin';
 
   @override
   void dispose() {
@@ -51,13 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _fillCredentials(String role, String email, String password) {
-    setState(() {
-      _selectedRole = role;
-      _emailController.text = email;
-      _passwordController.text = password;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -298,73 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                             ),
 
-                            const SizedBox(height: 22),
-
-                            // Quick Demo Credentials Selector
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: const [
-                                      Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF2563EB)),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        'Quick Demo One-Click Login:',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF334155),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      _buildRolePill(
-                                        role: 'Super Admin',
-                                        icon: Icons.admin_panel_settings_rounded,
-                                        email: 'superadmin@auraems.com',
-                                        pass: 'SuperAdmin@123',
-                                        color: const Color(0xFF0F172A),
-                                      ),
-                                      _buildRolePill(
-                                        role: 'School Admin',
-                                        icon: Icons.business_rounded,
-                                        email: 'admin@auraems.com',
-                                        pass: 'Admin@123',
-                                        color: const Color(0xFF2563EB),
-                                      ),
-                                      _buildRolePill(
-                                        role: 'Staff Login',
-                                        icon: Icons.badge_rounded,
-                                        email: 'staff@auraems.com',
-                                        pass: 'Staff@123',
-                                        color: const Color(0xFF0D9488),
-                                      ),
-                                      _buildRolePill(
-                                        role: 'Student',
-                                        icon: Icons.person_rounded,
-                                        email: 'alex.morgan@auraems.com',
-                                        pass: 'Student@123',
-                                        color: const Color(0xFF7C3AED),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 28),
 
                             // Email Field
                             const Text(
@@ -590,56 +516,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildRolePill({
-    required String role,
-    required IconData icon,
-    required String email,
-    required String pass,
-    required Color color,
-  }) {
-    final isSelected = _selectedRole == role;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => _fillCredentials(role, email, pass),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.12) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? color : const Color(0xFFCBD5E1),
-            width: isSelected ? 1.5 : 1.0,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.15),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: isSelected ? color : const Color(0xFF64748B)),
-            const SizedBox(width: 5),
-            Text(
-              role,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                color: isSelected ? color : const Color(0xFF334155),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildFeatureRow(IconData icon, String text) {
     return Row(
