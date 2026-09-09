@@ -4,10 +4,10 @@
   "description": "AURA EMS - Enterprise Multi-Tenant Education Management System",
   "private": true,
   "scripts": {
-    "build": "cd backend && npm install --include=dev && npm run build && npx prisma db push --accept-data-loss --force-reset",
+    "build": "cd backend && npm install --include=dev && npm run build && npx prisma db push --accept-data-loss",
     "start": "cd backend && npm start",
-    "render:build": "npm run build && cd backend && npm run prisma:seed:clean",
-    "db:push": "cd backend && npx prisma db push --accept-data-loss --force-reset",
+    "render:build": "npm run build",
+    "db:push": "cd backend && npx prisma db push --accept-data-loss",
     "db:seed": "cd backend && npm run prisma:seed:clean",
     "db:seed:demo": "cd backend && npm run prisma:seed",
     "postinstall": "cd backend && npm install --include=dev"

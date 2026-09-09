@@ -4,27 +4,13 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('--- Wiping All Dummy Records & Initializing Clean Database ---');
-  await prisma.certificate.deleteMany();
-  await prisma.feePayment.deleteMany();
-  await prisma.feeStructure.deleteMany();
-  await prisma.mark.deleteMany();
-  await prisma.exam.deleteMany();
-  await prisma.attendance.deleteMany();
-  await prisma.timetable.deleteMany();
-  await prisma.notice.deleteMany();
-  await prisma.student.deleteMany();
-  await prisma.subject.deleteMany();
-  await prisma.teacher.deleteMany();
-  await prisma.class.deleteMany();
-  await prisma.setting.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.client.deleteMany();
+  console.log('--- Ensuring Base Platform and Default School Exist (Preserving All Data) ---');
 
-  console.log('--- Initializing Clean Tenants ---');
   // Client 1: Platform Administration Tenant
-  await prisma.client.create({
-    data: {
+  await prisma.client.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
       id: 1,
       name: 'Platform Admin',
       slug: 'platform',
@@ -33,9 +19,11 @@ async function main() {
     },
   });
 
-  // Client 2: Fresh Institution Tenant (Clean slate for client)
-  await prisma.client.create({
-    data: {
+  // Client 2: Default Institution Tenant
+  await prisma.client.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
       id: 2,
       name: 'Bright Future Public School',
       slug: 'bright-future',
@@ -44,13 +32,15 @@ async function main() {
     },
   });
 
-  console.log('--- Provisioning Clean Administrator Accounts ---');
+  console.log('--- Ensuring Administrator Accounts Exist ---');
   const superPassword = await bcrypt.hash('SuperAdmin@123', 10);
   const adminPassword = await bcrypt.hash('Admin@123', 10);
 
   // Super Admin
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email: 'superadmin@auraems.com' },
+    update: {},
+    create: {
       clientId: 1,
       name: 'Platform Super Admin',
       email: 'superadmin@auraems.com',
@@ -60,8 +50,10 @@ async function main() {
   });
 
   // School Admin (Client 2)
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email: 'admin@auraems.com' },
+    update: {},
+    create: {
       clientId: 2,
       name: 'School Administrator',
       email: 'admin@auraems.com',
@@ -82,7 +74,12 @@ async function main() {
   ];
 
   for (const s of defaultSettings) {
-    await prisma.setting.create({ data: s });
+    const existing = await prisma.setting.findFirst({
+      where: { clientId: 2, key: s.key },
+    });
+    if (!existing) {
+      await prisma.setting.create({ data: s });
+    }
   }
 
   // Sync Postgres ID sequence for clients table so new onboarded schools start from 3

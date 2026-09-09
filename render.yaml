@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm run build && cd backend && npx prisma db push && npm run prisma:seed
+    buildCommand: npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
