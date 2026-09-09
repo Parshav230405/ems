@@ -12,6 +12,7 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "ts-node prisma/seed.ts",
     "db:backup": "ts-node src/scripts/backup.ts",
+    "db:restore": "ts-node src/scripts/restore.ts",
     "test": "jest --runInBand --detectOpenHandles --forceExit"
   },
   "dependencies": {
