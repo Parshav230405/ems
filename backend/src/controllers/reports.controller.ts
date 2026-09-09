@@ -346,7 +346,7 @@ export class ReportsController {
       });
 
       let totalExpected = 0;
-      const classBreakdown = [];
+      const classBreakdown: any[] = [];
 
       for (const fs of feeStructures) {
         const studentCount = await prisma.student.count({

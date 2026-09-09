@@ -73,7 +73,7 @@ async function restoreDatabase() {
       console.log(`Restoring ${data.settings.length} settings...`);
       for (const item of data.settings) {
         await prisma.setting.upsert({
-          where: { id: item.id },
+          where: { clientId_key: { clientId: item.clientId, key: item.key } },
           update: item,
           create: item,
         });
