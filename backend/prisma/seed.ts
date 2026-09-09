@@ -292,7 +292,7 @@ async function main() {
     { name: 'Jiya Shah', gender: 'Female', parent: 'Chetan Shah', contact: '9876543239' },
   ];
 
-  const createdStudents = [];
+  const createdStudents: any[] = [];
   for (let i = 0; i < studentNames.length; i++) {
     const s = studentNames[i];
     const classId = i < 10 ? class10A.id : i < 20 ? class9B.id : class8C.id;
