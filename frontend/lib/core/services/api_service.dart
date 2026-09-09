@@ -16,11 +16,9 @@ class ApiException implements Exception {
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
-  ApiService._internal() {
-    baseUrl = defaultBaseUrl;
-  }
+  ApiService._internal();
 
-  static String get defaultBaseUrl {
+  String get baseUrl {
     if (kIsWeb) {
       final origin = Uri.base.origin;
       if (origin.isNotEmpty && !origin.startsWith('file://')) {
@@ -31,8 +29,6 @@ class ApiService {
     }
     return const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:5000/api');
   }
-
-  late String baseUrl;
   String? _token;
 
   void setToken(String? token) {

@@ -425,7 +425,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                   DataCell(
                     OutlinedButton.icon(
                       onPressed: () {
-                        UrlHelper.openUrl('http://localhost:5000${b['downloadUrl']}');
+                        UrlHelper.openUrl(b['downloadUrl']);
                       },
                       icon: const Icon(Icons.download_rounded, size: 14),
                       label: const Text('Download', style: TextStyle(fontSize: 11)),

@@ -14,7 +14,7 @@ class FeesManagementScreen extends StatefulWidget {
 }
 
 class _FeesManagementScreenState extends State<FeesManagementScreen> {
-  final _searchController = TextEditingController(text: 'Rahul');
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -94,7 +94,7 @@ class _FeesManagementScreenState extends State<FeesManagementScreen> {
   }
 
   void _downloadReceipt(String receiptNo) {
-    UrlHelper.openUrl('http://localhost:5000/api/fees/receipts/$receiptNo/download');
+    UrlHelper.openUrl('/api/fees/receipts/$receiptNo/download');
   }
 
   @override

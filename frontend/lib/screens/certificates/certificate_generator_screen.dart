@@ -101,7 +101,7 @@ class _CertificateGeneratorScreenState extends State<CertificateGeneratorScreen>
 
       final downloadUrl = res['downloadUrl'];
       if (downloadUrl != null) {
-        UrlHelper.openUrl('http://localhost:5000$downloadUrl');
+        UrlHelper.openUrl(downloadUrl);
       }
 
       if (mounted) {
@@ -374,7 +374,7 @@ class _CertificateGeneratorScreenState extends State<CertificateGeneratorScreen>
                           DataCell(
                             OutlinedButton.icon(
                               onPressed: () {
-                                UrlHelper.openUrl('http://localhost:5000/api/certificates/${c['certificateNo']}/download');
+                                UrlHelper.openUrl('/api/certificates/${c['certificateNo']}/download');
                               },
                               icon: const Icon(Icons.download_rounded, size: 14),
                               label: const Text('Download PDF', style: TextStyle(fontSize: 11)),

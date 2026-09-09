@@ -572,7 +572,7 @@ class _StudentReportModalState extends State<_StudentReportModal> {
                     onPressed: _selectedStudentId == null
                         ? null
                         : () {
-                            UrlHelper.openUrl('http://localhost:5000/api/reports/student/$_selectedStudentId/download');
+                            UrlHelper.openUrl('/api/reports/student/$_selectedStudentId/download');
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Generating official Student Report Card (PDF)...'),
@@ -1511,7 +1511,7 @@ class _StudentInternshipReportModalState extends State<_StudentInternshipReportM
 
       final downloadUrl = res['downloadUrl'];
       if (downloadUrl != null) {
-        UrlHelper.openUrl('http://localhost:5000$downloadUrl');
+        UrlHelper.openUrl(downloadUrl);
       }
 
       if (mounted) {

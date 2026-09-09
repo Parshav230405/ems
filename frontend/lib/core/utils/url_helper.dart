@@ -21,8 +21,17 @@ class UrlHelper {
   static Future<void> openUrl(String url) async {
     final resolved = resolveUrl(url);
     final uri = Uri.parse(resolved);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok) {
+        await launchUrl(uri);
+      }
+    } catch (_) {
+      try {
+        await launchUrl(uri);
+      } catch (e) {
+        debugPrint('UrlHelper launch error: $e');
+      }
     }
   }
 }

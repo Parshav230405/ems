@@ -115,7 +115,7 @@ class _StudentProfileDialogState extends State<StudentProfileDialog> with Single
               children: [
                 OutlinedButton.icon(
                   onPressed: () {
-                    UrlHelper.openUrl('http://localhost:5000/api/reports/student/${s['id']}/download');
+                    UrlHelper.openUrl('/api/reports/student/${s['id']}/download');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Downloading Report Card for ${s['name']}...'),

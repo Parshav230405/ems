@@ -21,6 +21,7 @@ import '../screens/notices/notices_screen.dart';
 import '../screens/reports/reports_screen.dart';
 import '../screens/certificates/certificate_generator_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/superadmin/client_console_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -68,6 +69,7 @@ class _AppShellState extends State<AppShell> {
         break;
       case 7:
         final sp = Provider.of<StudentProvider>(context, listen: false);
+        sp.fetchStudents();
         if (sp.students.isNotEmpty) {
           Provider.of<FeesProvider>(context, listen: false).fetchStudentFeeStatus(sp.students.first.id);
         }
@@ -411,17 +413,35 @@ class _AppShellState extends State<AppShell> {
           const SizedBox(width: 16),
 
           // Notification Bell
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.cardBorder),
+          InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => selectTab(9),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.cardBorder),
+              ),
+              child: const Icon(Icons.notifications_none_rounded, size: 20, color: AppColors.textSecondary),
             ),
-            child: const Icon(Icons.notifications_none_rounded, size: 20, color: AppColors.textSecondary),
           ),
 
-          const SizedBox(width: 16),
+          if (user?.isSuperAdmin == true) ...[
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientConsoleScreen()));
+              },
+              icon: const Icon(Icons.domain_verification_rounded, size: 16),
+              label: const Text('Platform Console'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
 
           // User Profile Pill & Role
           Container(

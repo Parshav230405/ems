@@ -252,7 +252,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                   icon: const Icon(Icons.picture_as_pdf_outlined, size: 18, color: Color(0xFF0284C7)),
                                   tooltip: 'Download Report Card (PDF)',
                                   onPressed: () {
-                                    UrlHelper.openUrl('http://localhost:5000/api/reports/student/${student.id}/download');
+                                    UrlHelper.openUrl('/api/reports/student/${student.id}/download');
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text('Downloading Report Card for ${student.name}...'),

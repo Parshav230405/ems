@@ -4,6 +4,7 @@ import '../../core/constants/colors.dart';
 import '../../models/client_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/client_provider.dart';
+import '../../widgets/app_shell.dart';
 
 class ClientConsoleScreen extends StatefulWidget {
   const ClientConsoleScreen({super.key});
@@ -179,6 +180,19 @@ class _ClientConsoleScreenState extends State<ClientConsoleScreen> {
           ),
           Row(
             children: [
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AppShell()));
+                },
+                icon: const Icon(Icons.school_rounded, size: 16),
+                label: const Text('Open School Portal'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withOpacity(0.4)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+              ),
+              const SizedBox(width: 14),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
