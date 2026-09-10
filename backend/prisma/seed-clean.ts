@@ -82,7 +82,69 @@ async function main() {
     }
   }
 
-  // Sync Postgres ID sequence for clients table so new onboarded schools start from 3
+  // Client 3: KA School (upsert)
+  const client3 = await prisma.client.upsert({
+    where: { slug: 'ka-school' },
+    update: {},
+    create: {
+      name: 'KA Academy',
+      slug: 'ka-school',
+      status: 'active',
+      adminEmail: 'ka@gmail.com',
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'ka@gmail.com' },
+    update: {},
+    create: {
+      clientId: client3.id,
+      name: 'KA Administrator',
+      email: 'ka@gmail.com',
+      passwordHash: adminPassword,
+      role: Role.ADMIN,
+    },
+  });
+
+  // Client 4: DP School (upsert)
+  const client4 = await prisma.client.upsert({
+    where: { slug: 'dp-school' },
+    update: {},
+    create: {
+      name: 'DP Academy',
+      slug: 'dp-school',
+      status: 'active',
+      adminEmail: 'dp@gmail.com',
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'dp@gmail.com' },
+    update: {},
+    create: {
+      clientId: client4.id,
+      name: 'DP Administrator',
+      email: 'dp@gmail.com',
+      passwordHash: adminPassword,
+      role: Role.ADMIN,
+    },
+  });
+
+  // Ensure starter classes for KA & DP
+  for (const c of [client3, client4]) {
+    const classCount = await prisma.class.count({ where: { clientId: c.id } });
+    if (classCount === 0) {
+      await prisma.class.createMany({
+        data: [
+          { clientId: c.id, name: '10', division: 'A', academicYear: '2025-2026' },
+          { clientId: c.id, name: '9', division: 'A', academicYear: '2025-2026' },
+          { clientId: c.id, name: '8', division: 'A', academicYear: '2025-2026' },
+        ],
+      });
+    }
+  }
+
+  // Sync Postgres ID sequence for clients table so newly onboarded schools start after highest id
   await prisma.$executeRawUnsafe(
     `SELECT setval(pg_get_serial_sequence('"clients"', 'id'), coalesce((SELECT max(id) FROM "clients"), 1));`
   );
