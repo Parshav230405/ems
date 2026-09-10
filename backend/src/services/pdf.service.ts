@@ -408,4 +408,184 @@ export class PdfService {
 
     doc.end();
   }
+
+  /**
+   * Generates a landscape A4 Timetable PDF for a specific class
+   */
+  public static generateTimetablePdf(
+    res: Response,
+    data: {
+      schoolName: string;
+      schoolTagline: string;
+      className: string;
+      academicYear: string;
+      days: string[];
+      periods: Array<{
+        period: number;
+        time: string;
+      }>;
+      entries: Array<{
+        dayOfWeek: string;
+        period: number;
+        subjectName: string;
+        teacherName?: string;
+        startTime?: string;
+        endTime?: string;
+      }>;
+    }
+  ): void {
+    const doc = new PDFDocument({
+      size: 'A4',
+      layout: 'landscape',
+      margin: 30,
+    });
+
+    const safeFilename = `Timetable_${data.className.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+
+    doc.pipe(res);
+
+    const width = doc.page.width;
+    const height = doc.page.height;
+    const margin = 30;
+    const contentWidth = width - margin * 2;
+
+    // Outer Border
+    doc.lineWidth(2).strokeColor('#1E3A8A').rect(20, 20, width - 40, height - 40).stroke();
+    doc.lineWidth(0.5).strokeColor('#D97706').rect(24, 24, width - 48, height - 48).stroke();
+
+    // Institutional Header
+    doc.font('Helvetica-Bold').fontSize(20).fillColor('#1E3A8A').text(data.schoolName.toUpperCase(), margin, 35, { align: 'center', width: contentWidth });
+    if (data.schoolTagline) {
+      doc.font('Helvetica-Oblique').fontSize(9.5).fillColor('#6B7280').text(data.schoolTagline, margin, 58, { align: 'center', width: contentWidth });
+    }
+
+    // Badge / Subtitle
+    const badgeY = 75;
+    doc.rect(margin + contentWidth / 2 - 180, badgeY, 360, 24).fillAndStroke('#EFF6FF', '#93C5FD');
+    doc.font('Helvetica-Bold').fontSize(11).fillColor('#1D4ED8').text(
+      `CLASS TIMETABLE: ${data.className} (${data.academicYear})`,
+      margin + contentWidth / 2 - 180,
+      badgeY + 6,
+      { align: 'center', width: 360 }
+    );
+
+    // Timetable Table Layout
+    const tableTop = 115;
+    const days = data.days.length > 0 ? data.days : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const periodCount = data.periods.length > 0 ? data.periods.length : 5;
+
+    const dayColWidth = 90;
+    const periodColWidth = (contentWidth - dayColWidth) / periodCount;
+    const headerHeight = 36;
+    const rowHeight = Math.min(65, (height - tableTop - 60) / days.length);
+
+    // Draw Table Header
+    doc.rect(margin, tableTop, dayColWidth, headerHeight).fillAndStroke('#1E3A8A', '#1E3A8A');
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#FFFFFF').text('DAY / TIME', margin, tableTop + 13, {
+      width: dayColWidth,
+      align: 'center',
+    });
+
+    for (let i = 0; i < periodCount; i++) {
+      const p = data.periods[i] || { period: i + 1, time: `Period ${i + 1}` };
+      const x = margin + dayColWidth + i * periodColWidth;
+      doc.rect(x, tableTop, periodColWidth, headerHeight).fillAndStroke('#1E3A8A', '#1E3A8A');
+
+      doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#FFFFFF').text(`Period ${p.period}`, x, tableTop + 6, {
+        width: periodColWidth,
+        align: 'center',
+      });
+      if (p.time) {
+        doc.font('Helvetica').fontSize(7.5).fillColor('#E0E7FF').text(p.time, x, tableTop + 20, {
+          width: periodColWidth,
+          align: 'center',
+        });
+      }
+    }
+
+    // Draw Day Rows & Cells
+    for (let r = 0; r < days.length; r++) {
+      const day = days[r];
+      const y = tableTop + headerHeight + r * rowHeight;
+      const isEvenRow = r % 2 === 0;
+
+      // Day Column
+      doc.rect(margin, y, dayColWidth, rowHeight).fillAndStroke(isEvenRow ? '#F8FAFC' : '#F1F5F9', '#CBD5E1');
+      doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#1E293B').text(day, margin, y + rowHeight / 2 - 5, {
+        width: dayColWidth,
+        align: 'center',
+      });
+
+      // Period Cells for this Day
+      for (let c = 0; c < periodCount; c++) {
+        const pNum = data.periods[c]?.period || c + 1;
+        const cellX = margin + dayColWidth + c * periodColWidth;
+
+        // Find entry
+        const entry = data.entries.find(
+          (e) => e.dayOfWeek.toLowerCase() === day.toLowerCase() && e.period === pNum
+        );
+
+        const isBreak = entry && (
+          entry.subjectName.toLowerCase().includes('break') ||
+          entry.subjectName.toLowerCase().includes('recess') ||
+          entry.subjectName.toLowerCase().includes('lunch')
+        );
+
+        if (isBreak) {
+          doc.rect(cellX, y, periodColWidth, rowHeight).fillAndStroke('#FEF3C7', '#FCD34D');
+          doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#B45309').text('☕ ' + entry.subjectName.toUpperCase(), cellX + 4, y + rowHeight / 2 - 9, {
+            width: periodColWidth - 8,
+            align: 'center',
+          });
+          const timeText = entry.startTime && entry.endTime ? `${entry.startTime} - ${entry.endTime}` : (data.periods[c]?.time || '');
+          if (timeText) {
+            doc.font('Helvetica').fontSize(7).fillColor('#D97706').text(timeText, cellX + 4, y + rowHeight / 2 + 3, {
+              width: periodColWidth - 8,
+              align: 'center',
+            });
+          }
+        } else if (entry) {
+          doc.rect(cellX, y, periodColWidth, rowHeight).fillAndStroke(isEvenRow ? '#FFFFFF' : '#F8FAFC', '#E2E8F0');
+          doc.font('Helvetica-Bold').fontSize(9).fillColor('#1E3A8A').text(entry.subjectName, cellX + 4, y + 10, {
+            width: periodColWidth - 8,
+            align: 'center',
+          });
+          if (entry.teacherName) {
+            doc.font('Helvetica').fontSize(7.5).fillColor('#475569').text(`Faculty: ${entry.teacherName}`, cellX + 4, y + 26, {
+              width: periodColWidth - 8,
+              align: 'center',
+            });
+          }
+          const timeText = entry.startTime && entry.endTime ? `${entry.startTime} - ${entry.endTime}` : (data.periods[c]?.time || '');
+          if (timeText) {
+            doc.font('Helvetica').fontSize(6.5).fillColor('#94A3B8').text(timeText, cellX + 4, y + 40, {
+              width: periodColWidth - 8,
+              align: 'center',
+            });
+          }
+        } else {
+          doc.rect(cellX, y, periodColWidth, rowHeight).fillAndStroke(isEvenRow ? '#FFFFFF' : '#F8FAFC', '#E2E8F0');
+          doc.font('Helvetica-Oblique').fontSize(8).fillColor('#CBD5E1').text('- Free Period -', cellX + 4, y + rowHeight / 2 - 4, {
+            width: periodColWidth - 8,
+            align: 'center',
+          });
+        }
+      }
+    }
+
+    // Footer
+    const footerY = height - 38;
+    const nowStr = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+    doc.font('Helvetica').fontSize(7.5).fillColor('#94A3B8').text(
+      `Generated on ${nowStr} • AURA EMS Enterprise School Management System • Official Schedule`,
+      margin,
+      footerY,
+      { width: contentWidth, align: 'center' }
+    );
+
+    doc.end();
+  }
 }

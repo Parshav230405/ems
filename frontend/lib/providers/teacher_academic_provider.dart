@@ -292,19 +292,24 @@ class AcademicProvider extends ChangeNotifier {
     required String classId,
     required String dayOfWeek,
     required int period,
-    required String subjectId,
+    String? subjectId,
     String? startTime,
     String? endTime,
+    bool isBreak = false,
   }) async {
     try {
-      await _api.post('/timetable', {
+      final payload = <String, dynamic>{
         'classId': classId,
         'dayOfWeek': dayOfWeek,
         'period': period,
-        'subjectId': subjectId,
         'startTime': startTime,
         'endTime': endTime,
-      });
+        'isBreak': isBreak,
+      };
+      if (subjectId != null && subjectId.isNotEmpty) {
+        payload['subjectId'] = subjectId;
+      }
+      await _api.post('/timetable', payload);
       await fetchTimetable(classId);
       return true;
     } catch (e) {

@@ -50,10 +50,10 @@ export class CertificatesController {
         return;
       }
 
-      // Generate unique certificate number: CERT-YYYY-XXXX
+      // Generate globally unique certificate number: CERT-YYYY-T<clientId>-XXXX
       const year = new Date().getFullYear();
       const count = await prisma.certificate.count({ where: { clientId } });
-      const certificateNo = `CERT-${year}-${String(1001 + count).padStart(4, '0')}`;
+      const certificateNo = `CERT-${year}-T${clientId}-${String(1001 + count).padStart(4, '0')}`;
 
       // Create audit log record in database
       const certificate = await prisma.certificate.create({
@@ -86,11 +86,13 @@ export class CertificatesController {
 
       const cert = await prisma.certificate.findFirst({
         where: { certificateNo },
+        orderBy: { issuedDate: 'desc' },
         include: {
           student: {
             include: { class: true },
           },
           issuer: true,
+          client: true,
         },
       });
 
@@ -104,7 +106,7 @@ export class CertificatesController {
       const principalSetting = await prisma.setting.findFirst({ where: { clientId: cert.clientId, key: 'principal_name' } });
 
       PdfService.generateCertificatePdf(res, {
-        schoolName: schoolNameSetting?.value || 'AURA EMS School',
+        schoolName: schoolNameSetting?.value || cert.client?.name || 'AURA EMS School',
         schoolTagline: schoolTaglineSetting?.value || 'Excellence in Education',
         certificateTitle: cert.title,
         certificateNo: cert.certificateNo,
@@ -114,7 +116,7 @@ export class CertificatesController {
         division: cert.student.class.division,
         body: cert.body,
         issueDate: cert.issuedDate.toISOString().split('T')[0],
-        principalName: principalSetting?.value || 'Principal',
+        principalName: principalSetting?.value || cert.issuer?.name || 'Authorized Signatory',
       });
     } catch (err: any) {
       res.status(500).json({ error: err.message });

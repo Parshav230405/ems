@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/student_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/utils/url_helper.dart';
@@ -270,12 +271,14 @@ class _CertificateGeneratorScreenState extends State<CertificateGeneratorScreen>
                         ),
                         child: Column(
                           children: [
-                            const Text(
-                              'BRIGHT FUTURE PUBLIC SCHOOL',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 1),
+                            Text(
+                              (Provider.of<AuthProvider>(context, listen: false).user?.clientName ?? 'AURA EMS School').toUpperCase(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 1),
                             ),
+                            const SizedBox(height: 2),
                             const Text(
-                              'Smart Management for a Brighter Future',
+                              'Institutional Letterhead & Recognition',
                               style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppColors.textSecondary),
                             ),
                             const SizedBox(height: 20),
@@ -288,12 +291,17 @@ class _CertificateGeneratorScreenState extends State<CertificateGeneratorScreen>
                             const Text('This is to certify that', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                             const SizedBox(height: 8),
                             Text(
-                              sp.students.firstWhere((s) => s.id == _selectedStudentId, orElse: () => sp.students.first).name,
+                              sp.students.isNotEmpty
+                                  ? (sp.students.where((s) => s.id == _selectedStudentId).firstOrNull?.name ?? sp.students.first.name)
+                                  : 'Select Student',
+                              textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'of Class ${sp.students.firstWhere((s) => s.id == _selectedStudentId, orElse: () => sp.students.first).classDivision}',
+                              sp.students.isNotEmpty
+                                  ? 'of Class ${(sp.students.where((s) => s.id == _selectedStudentId).firstOrNull?.classDivision ?? sp.students.first.classDivision)}'
+                                  : '',
                               style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                             ),
                             const SizedBox(height: 16),
@@ -303,14 +311,20 @@ class _CertificateGeneratorScreenState extends State<CertificateGeneratorScreen>
                               style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.5),
                             ),
                             const SizedBox(height: 36),
-                            const Row(
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Date: 09 September 2025', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                                Text(
+                                  'Date: ${DateTime.now().day.toString().padLeft(2, '0')}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().year}',
+                                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                                ),
                                 Column(
                                   children: [
-                                    Text('Dr. S. K. Mukherjee', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                    Text('Principal / Authorized Signatory', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                                    Text(
+                                      Provider.of<AuthProvider>(context, listen: false).user?.name ?? 'School Principal',
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
+                                    const Text('Principal / Authorized Signatory', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
                                   ],
                                 ),
                               ],

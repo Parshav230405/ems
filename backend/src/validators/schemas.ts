@@ -133,9 +133,10 @@ export const timetableSchema = z.object({
   classId: z.string().uuid('Valid Class ID is required'),
   dayOfWeek: z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']),
   period: z.number().int().min(1).max(10),
-  subjectId: z.string().uuid('Valid Subject ID is required'),
+  subjectId: z.string().uuid('Valid Subject ID is required').optional().nullable(),
   startTime: z.string().optional().nullable(),
   endTime: z.string().optional().nullable(),
+  isBreak: z.boolean().optional().nullable(),
 });
 
 export const certificateGenerateSchema = z.object({

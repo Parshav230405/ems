@@ -259,6 +259,7 @@ router.delete(
   requireRole([Role.ADMIN]),
   TimetableController.deleteEntry
 );
+router.get('/timetable/class/:classId/download', TimetableController.downloadTimetablePdf);
 
 // --- Notices ---
 router.get('/notices', authenticateToken, requireSchoolTenant, NoticesController.listNotices);
