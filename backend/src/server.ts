@@ -18,6 +18,11 @@ app.use(express.urlencoded({ extended: true }));
 // Mount all API endpoints under /api
 app.use('/api', apiRouter);
 
+// Health check endpoint for Render/container probes
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Serve Flutter Web production frontend
 const candidatePaths = [
   path.resolve(__dirname, '../../frontend/build/web'),
@@ -39,11 +44,13 @@ if (frontendPath) {
 app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  const portNumber = parseInt(String(PORT), 10) || 5000;
+  app.listen(portNumber, '0.0.0.0', () => {
     console.log(`===========================================`);
     console.log(` AURA EMS Full-Stack Application Running`);
-    console.log(` URL:    http://localhost:${PORT}`);
-    console.log(` Health: http://localhost:${PORT}/api/health`);
+    console.log(` Host:   0.0.0.0`);
+    console.log(` Port:   ${portNumber}`);
+    console.log(` Health: http://0.0.0.0:${portNumber}/health`);
     console.log(`===========================================`);
   });
 }
